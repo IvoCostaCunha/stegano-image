@@ -1,0 +1,19 @@
+.image-history-wrapper {
+    background-color: rgb(31, 221, 56);
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.image-carroussel {
+    display: inline-flex;
+}
+
+img {
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 250px;
+    height: 250px;
+    border-radius: 15px;
+}

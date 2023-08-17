@@ -1,0 +1,29 @@
+.navbar-wrapper {
+    background-color: rgb(13, 141, 45);
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+nav ul li {
+    display: inline-flex;
+    padding-left: 40px;
+    padding-right: 40px;
+    margin: 0 10px;
+    text-align: center;
+}
+
+.right-side-nav {
+    text-align: right;
+}
+
+.left-side-nav {
+    text-align: right;
+}
+
+.navbar {
+    display: inline-flex;
+}
+
+h1 {
+    text-align: center;
+}

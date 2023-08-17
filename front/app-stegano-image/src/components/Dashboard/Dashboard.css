@@ -1,0 +1,10 @@
+.dashboard-wrapper {
+  background-color: rgb(97, 21, 148);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 2px;
+}
+
+.dashboard-title {
+  text-align: center;
+}
