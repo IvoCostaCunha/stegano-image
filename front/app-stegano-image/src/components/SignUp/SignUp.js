@@ -41,7 +41,7 @@ export default function SignUp() {
     e.preventDefault()
     const data = new FormData(e.currentTarget);
     try {
-      let res = await fetch("http://localhost:5000/api/0.1/signin", {
+      let res = await fetch("http://localhost:80/api/0.1/signin", {
         method: "POST",
         headers: {
           'Accept': 'application/json',

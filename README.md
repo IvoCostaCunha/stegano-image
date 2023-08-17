@@ -38,13 +38,26 @@ Start the backend first.
 
 Install the dependencies start the backend.
 
+On Windows:
+
 ```sh
 cd stegano-image/back
 python -m venv .venv
 .venv\Scripts\activate
 # using python virtual environment
-pip install -r /back/requirements.txt
-flask --app start run --host=0.0.0.0
+pip install -r requirements.txt
+flask --app start run --host=0.0.0.0 -p 80
+```
+
+On Mac:
+
+```sh
+cd stegano-image/back
+python -m venv .venv
+source .venv/bin/activate
+# using python virtual environment
+pip install -r requirements.txt
+flask --app start run --host=0.0.0.0 -p 80
 ```
 
 ##### frontend
@@ -52,7 +65,7 @@ flask --app start run --host=0.0.0.0
 Install the dependencies start the frontend.
 
 ```sh
-cd stegano-image/front
+cd stegano-image/front/app-stegano-image
 npm install
 npm start
 ```
