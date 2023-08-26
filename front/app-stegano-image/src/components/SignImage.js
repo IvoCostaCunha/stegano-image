@@ -8,25 +8,26 @@ import Copyright from './Copyright';
 
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
+import { red, green } from '@mui/material/colors';
 
 export default function InputFileUpload() {
   const dataContext = useContext(DataContext)
   const authContext = useContext(AuthContext)
 
-  const [tempImgToUpload, setTempImpToUpload] = useState([
-    
-  ])
+  const [uploadStatusColor, setUploadStatusColor] = useState(green[500])
+  const [showUploadStatus, setShowUploadStatus] = useState("inline")
+  const [uploadStatus, setUploadStatus] = useState('ddd')
 
-  // const a = authContext.id
-  // console.log(dataContext.getPngFiles(a, a))
+  const [tempImgToUpload, setTempImpToUpload] = useState([
+
+  ])
 
   const handleUploadFiles = async (event) => {
     const files = event.target.files
     for (const file of files) {
 
       let fileId = 0
-      if(tempImgToUpload.length > 0) fileId = tempImgToUpload[tempImgToUpload.length - 1].id + 1
-      console.log(fileId)
+      if (tempImgToUpload.length > 0) fileId = tempImgToUpload[tempImgToUpload.length - 1].id + 1
       const fileSrc = URL.createObjectURL(file);
       const fileName = file.name
 
@@ -39,7 +40,6 @@ export default function InputFileUpload() {
 
       // TODO later -> URL.revokeObjectURL(objectURL);
 
-
       setTempImpToUpload(current => [...current, {
         id: fileId,
         img: fileSrc,
@@ -51,11 +51,19 @@ export default function InputFileUpload() {
 
   const handleConfirm = async (event) => {
     const id = authContext.id
-    console.log(tempImgToUpload[0].file)
 
-    for(const file in tempImgToUpload) {
-      dataContext.sendPngFile(id, file.file)
+    const formData = new FormData();
+
+    
+
+    let tempFilesList = new DataTransfer();
+
+    for (const x in tempImgToUpload) {
+      console.log(tempImgToUpload[x].file.name, tempImgToUpload[x].file)
+      formData.append(tempImgToUpload[x].file.name, tempImgToUpload[x].file);
     }
+
+    dataContext.sendPngFiles(id, formData)
   }
 
   return (
@@ -96,29 +104,32 @@ export default function InputFileUpload() {
             </Grid>
 
             <Grid item xs={4}>
-            <Toolbar>
-              <Box>
-                <Button sx={{margin: "2px"}}
-                  variant="contained"
-                  component="label"
-                >
-                  Add files to sign
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/png"
-                    multiple
-                    onChange={(e) => { handleUploadFiles(e) }}
-                  />
-                </Button>
-                <Button sx={{margin: "2px"}}
-                  variant="contained"
-                  component="label"
-                  onClick={(e) => {handleConfirm()}}
-                >
-                  Confirm
-                </Button>
-              </Box>
+              <Toolbar>
+                <Box>
+                  <Button sx={{ margin: "2px" }}
+                    variant="contained"
+                    component="label"
+                  >
+                    Add files to sign
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/png"
+                      multiple
+                      onChange={(e) => { handleUploadFiles(e) }}
+                    />
+                  </Button>
+                  <Button sx={{ margin: "2px" }}
+                    variant="contained"
+                    component="label"
+                    onClick={(e) => { handleConfirm() }}
+                  >
+                    Confirm
+                  </Button>
+                  <Typography component="h5" sx={{ display: showUploadStatus, color: uploadStatusColor }}>
+                    {uploadStatus}
+                  </Typography>
+                </Box>
               </Toolbar>
             </Grid>
           </Grid>

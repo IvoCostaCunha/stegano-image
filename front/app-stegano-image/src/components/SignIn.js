@@ -5,7 +5,6 @@ import Copyright from './Copyright';
 
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -15,33 +14,37 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
-import { red } from '@mui/material/colors';
+import { red, green } from '@mui/material/colors';
 
 export default function SignIn() {
+  const [signInStatusColor, setSignInStatusColor] = useState(green[500])
   const [showSignInStatus, setShowSignInStatus] = useState("none")
-  const [signInStatus, setSignInStatus] = useState("Incorrect password and/or mail")
-  const context = useContext(AuthContext)
+  const [signInStatus, setSignInStatus] = useState("")
+
+  const authContext = useContext(AuthContext)
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setShowSignInStatus("inline")
 
-    const data = new FormData(e.currentTarget);
+    const formData = new FormData(e.currentTarget);
+    const data = { email: formData.get('email'), password: formData.get('password') }
 
-    const signInResponse = await context.signIn(data)
+    const response = await authContext.signIn(data)
 
-    if (signInResponse === true) navigate("/dashboard", { replace: true });
-    else if(signInResponse === "NETWORK_ERROR") {
-      setSignInStatus("Network error")
-      setShowSignInStatus("")
+    if (response.confirmation) {
+      setSignInStatus(response.message)
+      navigate("/dashboard", { replace: true });
     }
-    else setShowSignInStatus("")
-
+    else {
+      setSignInStatusColor(red[500])
+      setSignInStatus(response.error + ` (error: ${response.code})`)
+    }
   }
 
   return (
       <Grid container component="main" sx={{ height: '100vh' }}>
-        <CssBaseline />
         <Grid
           item
           xs={false}
@@ -79,7 +82,7 @@ export default function SignIn() {
                 fullWidth
                 id="email"
                 label="Email Address"
-                name="mail"
+                name="email"
                 autoComplete="email"
                 autoFocus
               />
@@ -97,7 +100,7 @@ export default function SignIn() {
                 control={<Checkbox value="remember" color="primary" />}
                 label="Remember me"
               />
-              <Typography component="h5" sx={{ display: showSignInStatus, color: red[500] }}>
+              <Typography component="h5" sx={{ display: showSignInStatus, color: signInStatusColor }}>
                 {signInStatus}
               </Typography>
               <Button

@@ -4,6 +4,10 @@ import os
 
 from app.endpoints.auth import auth
 from app.endpoints.files import files
+from app.endpoints.user import user
+
+from app.scripts.lsb import lsb
+
 from app.database import db
 
 # Done with https://www.youtube.com/watch?v=WFzRy8KVcrM
@@ -28,7 +32,10 @@ def create_app(test_config = None):
   db.app = app
   db.init_app(app)
   
+  app.register_blueprint(lsb)
+
   app.register_blueprint(auth)
   app.register_blueprint(files)
+  app.register_blueprint(user)
  
   return app

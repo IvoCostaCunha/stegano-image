@@ -4,17 +4,14 @@ import ImageHistory from './ImageHistory'
 import Navbar from './Navbar';
 import Copyright from './Copyright';
 
-import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
 import { AuthContext } from '../contexts/AuthContext';
 
 export default function Dashboard(props) {
-  const context = useContext(AuthContext);
-  const navigate = useNavigate()
-
-  if(!context.verifyToken()) navigate('/signin', {replace: true})
+  const authContext = useContext(AuthContext);
+  // const navigate = useNavigate()
   
   return (
       <Box sx={{ display: 'flex' }}>
@@ -33,7 +30,7 @@ export default function Dashboard(props) {
         >
           <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <h2 className='dashboard-title'>Welcome {context.username} with mail {context.mail}</h2>
+            {/* <h2 className='dashboard-title'>Welcome {authContext.username} with email {authContext.email}</h2> */}
             <ImageHistory />
             <Copyright sx={{ pt: 4 }} />
           </Container>

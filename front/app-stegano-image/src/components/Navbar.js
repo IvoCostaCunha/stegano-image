@@ -21,6 +21,11 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PeopleIcon from '@mui/icons-material/People';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import AddBoxIcon from '@mui/icons-material/AddBox';
+import FindInPageIcon from '@mui/icons-material/FindInPage';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { red } from '@mui/material/colors';
 
 const drawerWidth = 240;
 
@@ -69,120 +74,143 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 );
 
 export default function Dashboard(props) {
-  const context = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
   const appContext = useContext(AppContext)
 
   const navigate = useNavigate()
-  
+
   const [open, setOpen] = useState(true);
+  const [status, setStatus] = useState('')
+  const [showStatus, setShowStatus] = useState('None')
 
   const toggleDrawer = () => {
     setOpen(!open);
   };
 
 
-  const handleDisconnect = () => {
-    if(context.signOut()) navigate("/signin", { replace: true });
+  const handleDisconnect = async () => {
+    const response = await authContext.signOut()
+
+    if (response.confirmation) {
+      navigate("/signin", { replace: true });
+    }
+    else {
+      setStatus(response.error, ` (code: ${response.code}).`)
+      setShowStatus('inline')
+    }
   }
 
   return (
-      <Box sx={{ display: 'flex' }}>
-        <AppBar position="absolute" open={open}>
-          <Toolbar
-            sx={{
-              pr: '24px', // keep right padding when drawer closed
-            }}
-          >
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="open drawer"
-              onClick={toggleDrawer}
-              sx={{
-                marginRight: '36px',
-                ...(open && { display: 'none' }),
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography
-              component="h1"
-              variant="h6"
-              color="inherit"
-              noWrap
-              sx={{ flexGrow: 1 }}
-            >
-              {appContext.currentPage}
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <Drawer variant="permanent" open={open}>
-          <Toolbar
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              px: [1],
-            }}
-          >
-            <IconButton onClick={toggleDrawer}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </Toolbar>
-          <Divider />
-          <List component="nav">
-            <ListItemButton onClick={() => {
-              appContext.currentPage = "Dashboard"
-              navigate("/dashboard", { replace: true }); 
-              }}>
-              <ListItemIcon>
-                <DashboardIcon />
-              </ListItemIcon>
-              <ListItemText primary="Dashboard" />
-            </ListItemButton>
-
-            <ListItemButton onClick={() => {
-              appContext.currentPage = "Profile"
-              navigate("/profile", { replace: true });
-              }}>
-              <ListItemIcon>
-                <ShoppingCartIcon />
-              </ListItemIcon>
-              <ListItemText primary="Profile" />
-            </ListItemButton>
-
-            <ListItemButton onClick={() => {
-              appContext.currentPage = "Sign Image"
-              navigate("/sign-image", { replace: true }); 
-              }}>
-              <ListItemIcon>
-                <PeopleIcon />
-              </ListItemIcon>
-              <ListItemText primary="Sign new image" />
-            </ListItemButton>
-
-            <ListItemButton onClick={() => {handleDisconnect()}}>
-              <ListItemIcon>
-                <BarChartIcon />
-              </ListItemIcon>
-              <ListItemText primary="Disconnect" />
-            </ListItemButton>
-          </List>
-        </Drawer>
-        <Box
-          component="main"
+    <Box sx={{ display: 'flex' }}>
+      <AppBar position="absolute" open={open}>
+        <Toolbar
           sx={{
-            backgroundColor: (theme) =>
-              theme.palette.mode === 'light'
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900],
-            flexGrow: 1,
-            height: '100vh',
-            overflow: 'auto',
+            pr: '24px', // keep right padding when drawer closed
           }}
         >
-          <Toolbar />
-        </Box>
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="open drawer"
+            onClick={toggleDrawer}
+            sx={{
+              marginRight: '36px',
+              ...(open && { display: 'none' }),
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography
+            component="h1"
+            variant="h6"
+            color="inherit"
+            noWrap
+            sx={{ flexGrow: 1 }}
+          >
+            {appContext.currentPage}
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer variant="permanent" open={open}>
+        <Toolbar
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            px: [1],
+          }}
+        >
+          <IconButton onClick={toggleDrawer}>
+            <ChevronLeftIcon />
+          </IconButton>
+        </Toolbar>
+        <Divider />
+        <List component="nav">
+          <ListItemButton onClick={() => {
+            appContext.setCurrentPage('Dashboard')
+            navigate("/dashboard", { replace: true });
+          }}>
+            <ListItemIcon>
+              <DashboardIcon />
+            </ListItemIcon>
+            <ListItemText primary="Dashboard" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => {
+            appContext.setCurrentPage('Profile')
+            navigate("/profile", { replace: true });
+          }}>
+            <ListItemIcon>
+              <AccountBoxIcon />
+            </ListItemIcon>
+            <ListItemText primary="Profile" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => {
+            appContext.setCurrentPage('Sign Images')
+            navigate("/sign-image", { replace: true });
+          }}>
+            <ListItemIcon>
+              <AddBoxIcon />
+            </ListItemIcon>
+            <ListItemText primary="Sign new image" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => {
+            appContext.setCurrentPage('Verify Images')
+            navigate("/verify-image", { replace: true });
+          }}>
+            <ListItemIcon>
+              <FindInPageIcon />
+            </ListItemIcon>
+            <ListItemText primary="Verify Image" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => { handleDisconnect() }}>
+            <ListItemIcon>
+              <ExitToAppIcon />
+            </ListItemIcon>
+            <ListItemText primary="Disconnect" />
+          </ListItemButton>
+        </List>
+        <Typography component="h5" sx={{ display: showStatus, color: red[500] }}>
+          {status}
+        </Typography>
+      </Drawer>
+      <Box
+        component="main"
+        sx={{
+          backgroundColor: (theme) =>
+            theme.palette.mode === 'light'
+              ? theme.palette.grey[100]
+              : theme.palette.grey[900],
+          flexGrow: 1,
+          height: '100vh',
+          overflow: 'auto',
+        }}
+      >
+        <Toolbar />
       </Box>
+    </Box>
   );
 }

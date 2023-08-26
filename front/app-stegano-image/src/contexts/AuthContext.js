@@ -9,138 +9,213 @@ export default class AuthContextProvider extends Component {
     super(props);
     this.state = {
       token: localStorage.getItem('token'),
-      id: localStorage.getItem('id'),
+      id: Number(localStorage.getItem('id')),
       username: localStorage.getItem('username'),
-      mail: localStorage.getItem('mail'),
-
-      isConnected: () => {
-        if (this.state.token) return true
-        else return false
-      },
-
-      signOut: async () => {
-
-        // Send request to purge user token on API
-        try {
-          const delTokenRequest = await fetch(`http://localhost:80/api/0.1/disconnect/user/${this.state.id}`)
-          const delTokenRequestDataJSON = await delTokenRequest.json()
-
-          if (delTokenRequest.status === 200) {
-            if (delTokenRequestDataJSON.response === "OK") {
-              this.state.token = ""
-              this.state.id = ""
-              this.state.username = ""
-              this.state.mail = ""
-
-              // Delete cookies associated with user
-              localStorage.removeItem('id')
-              localStorage.removeItem('username')
-              localStorage.removeItem('mail')
-              localStorage.removeItem('token')
-
-              console.log("User disconnected successfully")
-              return true
-            }
-          } else {
-            this.state.token = ""
-            this.state.id = ""
-            this.state.username = ""
-            this.state.mail = ""
-
-            // Delete cookies associated with user
-            localStorage.removeItem('id')
-            localStorage.removeItem('username')
-            localStorage.removeItem('mail')
-            localStorage.removeItem('token')
-            console.log("Deconnexion failed on server")
-            return false
-          }
-        } catch (err) {
-          console.log(err)
-          return false
-        }
-      },
-
-      verifyToken: async () => {
-        try {
-          const verifyTokenRequest = await fetch("http://localhost:80/api/0.1/verifytoken", {
-            method: "POST",
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              id: this.state.id,
-              token: this.state.token
-            })
-          })
-
-          const verifyTokenRequestDataJSON = await verifyTokenRequest.json()
-
-          if (verifyTokenRequest.status === 200) {
-            return verifyTokenRequestDataJSON.response === "OK"
-          } else return false
-        } catch (err) {
-          console.log(err)
-          return false
-        }
-      },
-
-      signIn: async (signInData) => {
-
-        try {
-          const signInRequest = await fetch("http://localhost:80/api/0.1/signin", {
-            method: "POST",
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              mail: signInData.get('mail'),
-              password: signInData.get('password'),
-            }),
-
-          })
-
-          const signInRequestDataJSON = await signInRequest.json()
-
-          if (signInRequest.status === 200) {
-
-            if (signInRequestDataJSON.response === "OK") {
-
-              this.state.token = signInRequestDataJSON.token
-              this.state.id = signInRequestDataJSON.id
-              this.state.mail = signInRequestDataJSON.mail
-              this.state.username = signInRequestDataJSON.username
-
-              localStorage.setItem('token', this.state.token)
-              localStorage.setItem('id', this.state.id)
-              localStorage.setItem('mail', this.state.mail)
-              localStorage.setItem('username', this.state.username)
-
-              console.log("User authentified and user data retrieved")
-              return true
-
-            }
-            else {
-              console.log("User non authentified")
-              this.token = false
-              return false
-            }
-          }
-
-        } catch (err) {
-          console.log(err)
-          if (err.message === "NetworkError when attempting to fetch resource.") return "NETWORK_ERROR"
-          return "ERROR"
-        }
-      }
+      email: localStorage.getItem('email'),
+      created_at: localStorage.getItem('created_at')
     }
   }
 
+  signIn = async (signInData) => {
+    try {
+      const request = await fetch("http://localhost:5000/api/0.1/auth/signin", {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: signInData.email,
+          password: signInData.password
+        }),
+
+      })
+
+      const requestJSON = await request.json()
+
+      if (request.status === 200) {
+        // this.state.token = requestJSON.token
+        // this.state.id = requestJSON.id
+        // this.state.email = requestJSON.email
+        // this.state.username = requestJSON.username
+        // this.state.created_at = requestJSON.created_at
+
+        this.setState(prevState => ({ ...prevState, token: requestJSON.token }));
+        this.setState(prevState => ({ ...prevState, id: requestJSON.id }));
+        this.setState(prevState => ({ ...prevState, email: requestJSON.email }));
+        this.setState(prevState => ({ ...prevState, username: requestJSON.username }));
+        this.setState(prevState => ({ ...prevState, created_at: requestJSON.created_at }));
+
+        this.updateLocalStorage(requestJSON.token, requestJSON.id, requestJSON.email, requestJSON.username, requestJSON.created_at)
+
+        console.log(requestJSON.message)
+        return { message: requestJSON.message, confirmation: true, code: request.status }
+      }
+      else {
+        console.log(requestJSON.error)
+        return { error: requestJSON.error, confirmation: false, code: request.status }
+      }
+
+    } catch (err) {
+      console.log(err)
+      return { error: err.message, confirmation: false, code: "None" }
+    }
+  }
+
+  signOut = async () => {
+    // Send request to purge user token on API
+    try {
+      const request = await fetch(`http://localhost:5000/api/0.1/auth/signout`, {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: this.state.id,
+        })
+      })
+      const requestJSON = await request.json()
+
+      // Delete cookies associated with user and state vars
+      this.purgeStateVars()
+      this.purgeLocalStorage()
+
+      if (request.status === 200) {
+        console.log(requestJSON.message)
+        return { message: requestJSON.message, confirmation: true, code: request.status }
+      }
+      else {
+        console.log(requestJSON.error)
+        return { error: requestJSON.error, confirmation: false, code: request.status }
+      }
+    } catch (err) {
+      console.log(err)
+      return { error: err.message, confirmation: false, code: "None" }
+    }
+  }
+
+  signUp = async (signUpData) => {
+    try {
+      let request = await fetch("http://localhost:5000/api/0.1/auth/signup", {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: signUpData.username,
+          email: signUpData.email,
+          password: signUpData.password
+        }),
+      });
+
+      const requestJSON = await request.json()
+
+      if (request.status === 201) {
+        console.log(requestJSON.message)
+        return { message: requestJSON.message, confirmation: true, code: request.status }
+      }
+      else {
+        console.log(requestJSON.error)
+        return { error: requestJSON.error, confirmation: false, code: request.status }
+      }
+    } catch (err) {
+      console.log(err)
+      return { error: err.message, confirmation: false, code: "None" }
+    }
+  }
+
+  updateUser = async (updateData) => {
+    try {
+      let request = await fetch("http://localhost:5000/api/0.1/auth/updateuser", {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: this.state.id,
+          username: updateData.username,
+          email: updateData.email
+        }),
+      });
+
+      const requestJSON = await request.json()
+
+      if (request.status === 200) {
+        this.setState(prevState => ({ ...prevState, email: updateData.email }));
+        this.setState(prevState => ({ ...prevState, username: updateData.username }));
+        this.updateLocalStorage(this.state.token, this.state.id, updateData.email, updateData.username, this.state.created_at)
+        console.log(requestJSON.message)
+        return { message: requestJSON.message, confirmation: true, code: request.status }
+      }
+      else {
+        console.log(requestJSON.error)
+        return { message: requestJSON.error, confirmation: false, code: request.status }
+      }
+
+
+    } catch (err) {
+      console.log(err)
+      return { error: err.message, confirmation: false, code: "None" }
+    }
+  }
+
+  verifyToken = async () => {
+    try {
+      const request = await fetch("http://localhost:5000/api/0.1/auth/verifytoken", {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: this.state.id,
+          token: this.state.token
+        })
+      })
+
+      const requestJSON = await request.json()
+
+      if (request.status === 200) {
+        console.log(requestJSON.message)
+        return { message: requestJSON.message, confirmation: true, code: request.status }
+      } else {
+        console.log(requestJSON.error)
+        return { error: requestJSON.error, confirmation: false, code: request.status }
+      }
+    } catch (err) {
+      console.log(err)
+      return { error: err.message, confirmation: false, code: "None" }
+    }
+  }
+
+  updateLocalStorage = async (token, id , email, username, created_at) => {
+    localStorage.setItem('token', token)
+    localStorage.setItem('id', id)
+    localStorage.setItem('email', email)
+    localStorage.setItem('username', username)
+    localStorage.setItem('created_at', created_at)
+  }
+
+  purgeLocalStorage = async () => {
+    localStorage.clear();
+  }
+
+  purgeStateVars = async () => {
+    this.setState(prevState => ({ ...prevState, token: '' }));
+    this.setState(prevState => ({ ...prevState, id: '' }));
+    this.setState(prevState => ({ ...prevState, email: '' }));
+    this.setState(prevState => ({ ...prevState, username: '' }));
+    this.setState(prevState => ({ ...prevState, created_at: '' }))
+  }
+
+
+
   render() {
     return (
-      <AuthContext.Provider value={{ ...this.state, }}>
+      <AuthContext.Provider value={{ ...this.state, signIn: this.signIn, signUp: this.signUp, signOut: this.signOut, updateUser: this.updateUser, verifyToken: this.verifyToken }}>
         {this.props.children}
       </AuthContext.Provider>
     )

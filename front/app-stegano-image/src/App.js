@@ -9,13 +9,13 @@ import { RouterProvider } from 'react-router-dom';
 function App() {
 
   return (
-      <AppContextProvider>
-        <AuthContextProvider>
-          <DataContextProvider>
-            <RouterProvider router={Router} fallbackElement={<p>Initial Load...</p>} />
-          </DataContextProvider>
-        </AuthContextProvider>
-      </AppContextProvider>
+    <AppContextProvider>
+      <AuthContextProvider>
+        <DataContextProvider>
+          <RouterProvider router={Router} fallbackElement={<p>Initial Load...</p>} />
+        </DataContextProvider>
+      </AuthContextProvider>
+    </AppContextProvider>
   );
 }
 

@@ -8,7 +8,7 @@ import SignIn from './SignIn.js';
 import SignUp from './SignUp.js';
 import SignImage from './SignImage.js';
 import Profile from './Profile.js';
-import CheckImage from "./CheckImage.js";
+import VerifyImage from "./VerifyImage.js";
 
 
 function BuildRouter() {
@@ -46,10 +46,22 @@ function BuildRouter() {
           element: <SignIn />,
         },
         {
+          path: "*",
+          // action: privateAction,
+          loader: inviteLoader,
+          element: <SignIn />,
+        },
+        {
           path: "signin",
           // action: privateAction,
           loader: inviteLoader,
           element: <SignIn />,
+        },
+        {
+          path: '/',
+          // action: privateAction,
+          loader: inviteLoader,
+          element: <SignIn />
         },
         {
           path: "signup",
@@ -76,10 +88,10 @@ function BuildRouter() {
           element: <Profile />,
         },
         {
-          path: "check-image",
+          path: "verify-image",
           // action: privateAction,
           loader: userLoader,
-          element: <CheckImage />
+          element: <VerifyImage />
         }
       ],
     },

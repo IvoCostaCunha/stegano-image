@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from markupsafe import escape
 import validators
 import bcrypt
 from datetime import datetime
@@ -32,22 +33,19 @@ def signUp():
     email = request.json['email']
     password = request.json['password']
 
-    print('aaaaaaaaaaa', datetime.now())
-
     if(len(password) < 6):
-        return {'error': 'Password too short.'}, HTTP_400_BAD_REQUEST
+        return {'error': 'Password is too short.'}, HTTP_400_BAD_REQUEST
     
     if(" " in username):
         return {'error': 'Username must be alphanumeric and not contain spaces.'}, HTTP_400_BAD_REQUEST
     
     if(not validators.email(email)):
-        return {'error': 'Email is not formated the right way.'}, HTTP_400_BAD_REQUEST
+        return {'error': 'Email is not valid.'}, HTTP_400_BAD_REQUEST
     
     if(User.query.filter_by(email = email).first() is not None):
         return {'error': 'Email is already in use.'}, HTTP_409_CONFLICT
 
     hashData = hashPassword(password)
-    print(hashData)
     salt  = hashData[0]
     hashedPassword = hashData[1]
 
@@ -57,7 +55,7 @@ def signUp():
 
 
     return {
-            'message': 'User created',
+            'message': 'User created with success.',
             'user': {
                 'username': username,
                 'email': email
@@ -80,13 +78,17 @@ def signIn():
         if(response):
             distributedTokens[user.id] = uuid.uuid4()
             return {
-                'message': 'User authentified.',
+                'message': 'User authentified with success.',
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'created_at': user.created_at,
                 'token': distributedTokens[user.id]
                 }, HTTP_200_OK
         else:
-            return {'message': 'User non authentified.'}, HTTP_401_UNAUTHORIZED
+            return {'error': 'User could not be authentified.'}, HTTP_401_UNAUTHORIZED
     else:
-        return {'message': 'User not found.'}, HTTP_401_UNAUTHORIZED
+        return {'error': 'User not found.'}, HTTP_401_UNAUTHORIZED
 
 @auth.post('/signout')
 def signOut():
@@ -95,10 +97,10 @@ def signOut():
     print(distributedTokens)
     
     if(id not in distributedTokens.keys()):
-        return {'message': 'Id unidentified.'}, HTTP_400_BAD_REQUEST
+        return {'error': 'Id unidentified in connected users.'}, HTTP_400_BAD_REQUEST
     else:
         distributedTokens.pop(id)
-        message = 'User with id %s disconnected'%(id)
+        message = 'User with id %s disconnected.'%(id)
         return {'message': message}, HTTP_200_OK
 
 @auth.post('/verifytoken')
@@ -109,4 +111,29 @@ def verifyToken():
     if(id in distributedTokens.keys() and uuid.UUID(token) == distributedTokens[id]):
         return {'message': 'User token verified'}, HTTP_200_OK
     else:
-        return {'response': 'User token could not be verified'}, HTTP_401_UNAUTHORIZED
+        return {'error': 'User token could not be verified'}, HTTP_401_UNAUTHORIZED
+    
+@auth.post('/updateuser')
+def updateUser():
+    id = request.json['id']
+    username = request.json['username']
+    email = request.json['email']
+
+    if(" " in username):
+        return {'error': 'Username must be alphanumeric and not contain spaces.'}, HTTP_400_BAD_REQUEST
+    
+    if(not validators.email(email)):
+        return {'error': 'Email is not valid.'}, HTTP_400_BAD_REQUEST
+    
+    if(User.query.filter(email == email, id != id).first() is not None):
+        return {'error': 'Email is already in use.'}, HTTP_409_CONFLICT
+
+    user =  User.query.filter_by(id = id).first()
+
+    if(user is not None):
+        user.username = username
+        user.email = email
+        db.session.commit()
+        return {'message': 'User updated with success.'}, HTTP_200_OK
+    else:
+        return {'error': 'User with id %scould not be found.'%(id)}, HTTP_400_BAD_REQUEST
