@@ -80,7 +80,7 @@ def insertInImg(uuidBinArray, imgBinArray, symbol):
     
     
 
-def getDecodedData (rawPngFile):
+def lsb (rawPngFile):
     pilImg = Image.open(rawPngFile)
 
 
