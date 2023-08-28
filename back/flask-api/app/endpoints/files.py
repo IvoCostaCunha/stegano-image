@@ -16,7 +16,7 @@ def upload_files():
     for filename, file in files:
         file.save(filename)
         # print(filename, file)
-        newFile = lsb(file)
+        newFile = useLsb(file)
         uploadToAWS(id, file)
     
     return { 'message': 'File processed', file: newFile }, HTTP_200_OK
