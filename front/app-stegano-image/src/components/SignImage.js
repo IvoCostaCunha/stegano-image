@@ -15,30 +15,21 @@ export default function InputFileUpload() {
   const authContext = useContext(AuthContext)
 
   const [uploadStatusColor, setUploadStatusColor] = useState(green[500])
-  const [showUploadStatus, setShowUploadStatus] = useState("inline")
-  const [uploadStatus, setUploadStatus] = useState('ddd')
+  const [showUploadStatus, setShowUploadStatus] = useState('')
+  const [uploadStatus, setUploadStatus] = useState('')
 
   const [tempImgToUpload, setTempImpToUpload] = useState([
 
   ])
 
-  const handleUploadFiles = async (event) => {
-    const files = event.target.files
-    for (const file of files) {
-
-      let fileId = 0
-      if (tempImgToUpload.length > 0) fileId = tempImgToUpload[tempImgToUpload.length - 1].id + 1
+  const handleUploadFiles = async (e) => {
+    e.preventDefault()
+    const files = e.target.files
+    let id = 0
+    for (let file of files) {
       const fileSrc = URL.createObjectURL(file);
       const fileName = file.name
-
-      // const reader = new FileReader();
-      // reader.onload = (e) => {
-      //   fileSrc = file.result;
-      // };
-
-      //console.log(fileId, fileSrc, fileName, file)
-
-      // TODO later -> URL.revokeObjectURL(objectURL);
+      const fileId = id
 
       setTempImpToUpload(current => [...current, {
         id: fileId,
@@ -46,24 +37,38 @@ export default function InputFileUpload() {
         title: fileName,
         file: file
       }])
+      id++
     }
   }
 
-  const handleConfirm = async (event) => {
-    const id = authContext.id
+  const handleConfirm = async (e) => {
+    e.preventDefault()
+    setShowUploadStatus('inline')
 
     const formData = new FormData();
 
-    
-
-    let tempFilesList = new DataTransfer();
-
     for (const x in tempImgToUpload) {
-      console.log(tempImgToUpload[x].file.name, tempImgToUpload[x].file)
+      // console.log(tempImgToUpload)
       formData.append(tempImgToUpload[x].file.name, tempImgToUpload[x].file);
     }
 
-    dataContext.sendPngFiles(id, formData)
+    const response = await dataContext.sendPngFiles(authContext.id, formData)
+
+    if (response.confirmation) {
+      setUploadStatusColor(green[500])
+      setUploadStatus(response.message + ` (error: ${response.code})`)
+      // retrieve images then
+    }
+    else {
+      setUploadStatusColor(red[500])
+      setUploadStatus(response.error + ` (error: ${response.code})`)
+    }
+
+  }
+
+  const handleImageClick = async (e) => {
+    setTempImpToUpload(tempImgToUpload.filter(item => item.id.toString() !== e.target.id))
+    URL.revokeObjectURL(e.target.src)
   }
 
   return (
@@ -91,12 +96,14 @@ export default function InputFileUpload() {
               </Typography>
               <ImageList >
                 {tempImgToUpload.map((item) => (
-                  <ImageListItem key={item.img}>
+                  <ImageListItem key={item.id}>
                     <img
                       src={item.img}
                       srcSet={item.img}
+                      id={item.id}
                       alt={item.title}
                       loading="lazy"
+                      onClick={(e) => { handleImageClick(e) }}
                     />
                   </ImageListItem>
                 ))}
@@ -122,10 +129,10 @@ export default function InputFileUpload() {
                   <Button sx={{ margin: "2px" }}
                     variant="contained"
                     component="label"
-                    onClick={(e) => { handleConfirm() }}
+                    onClick={(e) => { handleConfirm(e) }}
                   >
                     Confirm
-                  </Button>
+                  </Button><br />
                   <Typography component="h5" sx={{ display: showUploadStatus, color: uploadStatusColor }}>
                     {uploadStatus}
                   </Typography>

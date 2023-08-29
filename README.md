@@ -57,6 +57,12 @@ python -m venv .venv
 source .venv/bin/activate
 # using python virtual environment
 pip install -r requirements.txt
+
+# if this fails at psycopg2
+# if you don't have brew installed install it otherwise skip this step
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install postgresql
+
 flask -run
 ```
 

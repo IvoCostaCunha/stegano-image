@@ -93,8 +93,6 @@ def signIn():
 @auth.post('/signout')
 def signOut():
     id = request.json['id']
-
-    print(distributedTokens)
     
     if(id not in distributedTokens.keys()):
         return {'error': 'Id unidentified in connected users.'}, HTTP_400_BAD_REQUEST
