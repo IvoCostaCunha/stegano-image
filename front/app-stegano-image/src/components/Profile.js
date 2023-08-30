@@ -3,37 +3,46 @@ import { AuthContext } from '../contexts/AuthContext';
 import Navbar from './Navbar';
 import Copyright from './Copyright';
 
-import { Container, Button, TextField, Toolbar, Box, Typography } from '@mui/material';
+import { Container, Button, TextField, Toolbar, Box, Typography, Snackbar, Alert, } from '@mui/material';
 import { red, green } from '@mui/material/colors';
 
 export default function SignImage(props) {
   const authContext = useContext(AuthContext);
 
-  const [updateStatusColor, setUpdateStatusColor] = useState(green[500])
-  const [showUpdateStatus, setShowUpdateStatus] = useState("inline")
-  const [updateStatus, setUpdateStatus] = useState('')
+  // Severities -> error, warning, info, success
+  const [severity, setSeverity] = useState('success')
+  const [status, setStatus] = useState('')
+  const [showStatus, setShowStatus] = useState(false)
+  const handleClose = async () => { setShowStatus(false) }
 
 
   const handleUpdate = async (e) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget);
     const data = { email: formData.get('email'), username: formData.get('username') }
-    setShowUpdateStatus('inline')
 
     const response = await authContext.updateUser(data)
 
     if (response.confirmation) {
-      setUpdateStatusColor(green[500])
-      setUpdateStatus(response.message)
+      setSeverity('success')
+      setStatus(response.message + ` (code: ${response.code})`)
     }
     else {
-      setUpdateStatusColor(red[500])
-      setUpdateStatus(response.error, ` (error: ${response.code})`)
+      setSeverity('error')
+      setStatus(response.error + ` (code: ${response.code})`)
     }
+    setShowStatus(true)
   }
 
   return (
     <Box sx={{ display: 'flex' }}>
+
+      <Snackbar open={showStatus} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} onClose={handleClose}>
+        <Alert variant="filled" onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+          {status}
+        </Alert>
+      </Snackbar>
+
       <Navbar />
       <Box
         component="main"
@@ -103,9 +112,6 @@ export default function SignImage(props) {
             >
               Update your profile
             </Button>
-            <Typography component="h5" sx={{ display: showUpdateStatus, color: updateStatusColor }}>
-              {updateStatus}
-            </Typography>
           </Box>
           <Copyright sx={{ pt: 4 }} />
         </Container>

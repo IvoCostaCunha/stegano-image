@@ -41,13 +41,14 @@ def upload_files():
 
     result = useLsb(files)
 
-    if result['confirmation']:
-        for files in result['signedPngFiles']:
-            print(result['signedPngFiles'])
-            for file in files:
-                print(file[0])
-                # autorised_downloads.append({'filesUuid': filesUuid, 'filename': f['filename'], 'signature': f['signature'], 'file': f['file']})
-                # print(autorised_downloads)
-            return { 'message': result['message'], 'download_id': filesUuid}, HTTP_200_OK
-    else:
-        return { 'error': result['error']}, HTTP_400_BAD_REQUEST
+    print(result)
+    # if result[0]['confirmation']:
+        # for files in result['signedPngFiles']:
+        #     print(result['signedPngFiles'])
+        #     for file in files:
+        #         print(file[0])
+        #         # autorised_downloads.append({'filesUuid': filesUuid, 'filename': f['filename'], 'signature': f['signature'], 'file': f['file']})
+        #         # print(autorised_downloads)
+        #     return { 'message': result['message'], 'download_id': filesUuid}, HTTP_200_OK
+    # else:
+    #     return { 'error': result['error']}, HTTP_400_BAD_REQUEST

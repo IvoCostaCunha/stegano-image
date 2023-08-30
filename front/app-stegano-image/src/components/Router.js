@@ -11,9 +11,9 @@ import Profile from './Profile.js';
 import VerifyImage from "./VerifyImage.js";
 
 
-function BuildRouter() {
+const BuildRouter = () => {
   
-  //const context = useContext(AuthContext);
+  // const context = useContext(AuthContext);
 
   const Layout = () => {
     return (
@@ -26,27 +26,26 @@ function BuildRouter() {
   }
 
   const userLoader = () => {
-    // if (!context.isConnected) redirect("/login")
-    // else return null
-    return null
+    const authentified = localStorage.getItem('authentified')
+    console.log(authentified)
+    if(authentified) {
+      return null
+    }
+    return redirect('signin')
+  }
 
+  const rootLoader = () => {
+    return null
   }
 
   const router = createBrowserRouter([
     {
       id: "root",
       path: "/",
-      loader() {
-        return 'loader';
-      },
-      Component: Layout,
+      loader: rootLoader,
       children: [
         {
-          index: true,
-          element: <SignIn />,
-        },
-        {
-          path: "*",
+          path: "/",
           // action: privateAction,
           loader: inviteLoader,
           element: <SignIn />,
@@ -56,12 +55,6 @@ function BuildRouter() {
           // action: privateAction,
           loader: inviteLoader,
           element: <SignIn />,
-        },
-        {
-          path: '/',
-          // action: privateAction,
-          loader: inviteLoader,
-          element: <SignIn />
         },
         {
           path: "signup",

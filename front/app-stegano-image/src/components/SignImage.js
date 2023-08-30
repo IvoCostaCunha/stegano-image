@@ -1,151 +1,165 @@
 import React, { useContext, useState } from 'react';
-import { Button, Container, Grid, ImageList, ImageListItem, Typography } from '@mui/material';
 import { AuthContext } from '../contexts/AuthContext';
 import { DataContext } from '../contexts/DataContext';
 
 import Navbar from './Navbar';
 import Copyright from './Copyright';
 
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import { red, green } from '@mui/material/colors';
+import { Button, Container, Grid, ImageList, ImageListItem, Typography, Box, Toolbar, ImageListItemBar, IconButton, ButtonGroup, Snackbar, Alert } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { red, green, grey } from '@mui/material/colors';
+import DeleteIconRounded from '@mui/icons-material/DeleteRounded';
+import DeleteForeverIconRounded from '@mui/icons-material/DeleteForeverRounded';
+import DriveFolderUploadRoundedIcon from '@mui/icons-material/DriveFolderUploadRounded';
+import FileOpenRoundedIcon from '@mui/icons-material/FileOpenRounded';
 
 export default function InputFileUpload() {
   const dataContext = useContext(DataContext)
   const authContext = useContext(AuthContext)
 
-  const [uploadStatusColor, setUploadStatusColor] = useState(green[500])
-  const [showUploadStatus, setShowUploadStatus] = useState('')
-  const [uploadStatus, setUploadStatus] = useState('')
+  // Severities -> error, warning, info, success
+  const [severity, setSeverity] = useState('success')
+  const [status, setStatus] = useState('')
+  const [showStatus, setShowStatus] = useState(false)
+  const handleClose = async () => { setShowStatus(false) }
 
-  const [tempImgToUpload, setTempImpToUpload] = useState([
+  const [loading, setLoading] = React.useState(false);
 
-  ])
+  const [tempImgToUpload, setTempImpToUpload] = useState([])
 
-  const handleUploadFiles = async (e) => {
+  const handleImportFiles = async (e) => {
     e.preventDefault()
     const files = e.target.files
-    let id = 0
     for (let file of files) {
-      const fileSrc = URL.createObjectURL(file);
+      const fileUrl = URL.createObjectURL(file);
       const fileName = file.name
-      const fileId = id
 
       setTempImpToUpload(current => [...current, {
-        id: fileId,
-        img: fileSrc,
-        title: fileName,
+        url: fileUrl,
+        filename: fileName,
         file: file
       }])
-      id++
     }
   }
 
-  const handleConfirm = async (e) => {
+  const handleRemoveImg = async (img) => {
+    console.log(img.url)
+    setTempImpToUpload(tempImgToUpload.filter(item => item.url !== img.url))
+    URL.revokeObjectURL(img.url)
+  }
+
+  const removeAllImgs = async () => {
+    for (const img in tempImgToUpload) URL.revokeObjectURL(img.url)
+    setTempImpToUpload([])
+  }
+
+  const handleUpload = async (e) => {
     e.preventDefault()
-    setShowUploadStatus('inline')
+    setLoading(true)
 
     const formData = new FormData();
 
     for (const x in tempImgToUpload) {
-      // console.log(tempImgToUpload)
       formData.append(tempImgToUpload[x].file.name, tempImgToUpload[x].file);
     }
 
     const response = await dataContext.sendPngFiles(authContext.id, formData)
 
     if (response.confirmation) {
-      setUploadStatusColor(green[500])
-      setUploadStatus(response.message + ` (error: ${response.code})`)
+      setSeverity('success')
+      setStatus(response.message + ` (code: ${response.code})`)
+      setLoading(false)
       // retrieve images then
     }
     else {
-      setUploadStatusColor(red[500])
-      setUploadStatus(response.error + ` (error: ${response.code})`)
+      setSeverity('error')
+      setStatus(response.error + ` (code: ${response.code})`)
+      setLoading(false)
     }
-
-  }
-
-  const handleImageClick = async (e) => {
-    setTempImpToUpload(tempImgToUpload.filter(item => item.id.toString() !== e.target.id))
-    URL.revokeObjectURL(e.target.src)
+    setShowStatus(true)
   }
 
   return (
     <Box sx={{ display: 'flex' }}>
+
+      <Snackbar open={showStatus} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} onClose={handleClose}>
+        <Alert variant="filled" onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+          {status}
+        </Alert>
+      </Snackbar>
+
       <Navbar />
       <Box
-        component="main"
         sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === 'light'
-              ? theme.palette.grey[100]
-              : theme.palette.grey[900],
+          backgroundColor: grey[100],
           flexGrow: 1,
           height: '100vh',
           overflow: 'auto',
+          paddingTop: '8vh',
         }}
       >
-        <Toolbar />
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-          <Grid container spacing={2}>
 
-            <Grid item xs={8}>
-              <Typography variant='h5' sx={{ textAlign: "center" }}>
-                Images to be signed
-              </Typography>
-              <ImageList >
-                {tempImgToUpload.map((item) => (
-                  <ImageListItem key={item.id}>
-                    <img
-                      src={item.img}
-                      srcSet={item.img}
-                      id={item.id}
-                      alt={item.title}
-                      loading="lazy"
-                      onClick={(e) => { handleImageClick(e) }}
-                    />
-                  </ImageListItem>
-                ))}
-              </ImageList>
-            </Grid>
+        <Toolbar position="fixed">
+          <ButtonGroup fullWidth variant="contained" aria-label="outlined primary button group">
+            <Button
+              startIcon={<DriveFolderUploadRoundedIcon />}
+              onClick={() => { document.getElementById('input_import_files').click() }}
+            >
+              Import files
+              <input
+                id='input_import_files'
+                type="file"
+                hidden
+                accept="image/png"
+                multiple
+                onChange={(e) => { handleImportFiles(e) }}
+              />
+            </Button>
+            <LoadingButton startIcon={<FileOpenRoundedIcon />}
+              onClick={handleUpload}
+              loading={loading}
+              loadingPosition="start"
+              variant="contained"
+            >
+              <span>Sign imported images</span>
+            </LoadingButton>
+            <Button
+              startIcon={<DeleteIconRounded />}
+              onClick={removeAllImgs}
+            >
+              Remove all images</Button>
+          </ButtonGroup>
+        </Toolbar>
 
-            <Grid item xs={4}>
-              <Toolbar>
-                <Box>
-                  <Button sx={{ margin: "2px" }}
-                    variant="contained"
-                    component="label"
-                  >
-                    Add files to sign
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/png"
-                      multiple
-                      onChange={(e) => { handleUploadFiles(e) }}
-                    />
-                  </Button>
-                  <Button sx={{ margin: "2px" }}
-                    variant="contained"
-                    component="label"
-                    onClick={(e) => { handleConfirm(e) }}
-                  >
-                    Confirm
-                  </Button><br />
-                  <Typography component="h5" sx={{ display: showUploadStatus, color: uploadStatusColor }}>
-                    {uploadStatus}
-                  </Typography>
-                </Box>
-              </Toolbar>
-            </Grid>
-          </Grid>
-          <Copyright sx={{ pt: 4 }} />
-
-        </Container>
+        <Box container margin={2}>
+          <ImageList cols={3}>
+            {tempImgToUpload.map((img) => (
+              <ImageListItem key={img.url}>
+                <img
+                  src={img.url}
+                  srcSet={img.url}
+                  id={img.id}
+                  alt={img.title}
+                  loading="lazy"
+                  style={{ maxWidth: '95%', maxHeight: '95%' }}
+                />
+                <ImageListItemBar
+                  title={img.filename}
+                  actionIcon={
+                    <IconButton
+                      sx={{ color: grey[200] }}
+                      onClick={() => { handleRemoveImg(img) }}
+                    >
+                      <DeleteForeverIconRounded />
+                    </IconButton>
+                  }
+                />
+              </ImageListItem>
+            ))}
+          </ImageList>
+        </Box>
+        <Copyright />
       </Box>
     </Box>
-
-
   )
 }

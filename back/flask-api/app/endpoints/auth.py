@@ -77,6 +77,7 @@ def signIn():
 
         if(response):
             distributedTokens[user.id] = uuid.uuid4()
+            
             return {
                 'message': 'User authentified with success.',
                 'id': user.id,
@@ -95,7 +96,7 @@ def signOut():
     id = request.json['id']
     
     if(id not in distributedTokens.keys()):
-        return {'error': 'Id unidentified in connected users.'}, HTTP_400_BAD_REQUEST
+        return {'error': 'Id unidentified in API array of connected users.'}, HTTP_400_BAD_REQUEST
     else:
         distributedTokens.pop(id)
         message = 'User with id %s disconnected.'%(id)
@@ -107,31 +108,6 @@ def verifyToken():
     token = request.json['token']
 
     if(id in distributedTokens.keys() and uuid.UUID(token) == distributedTokens[id]):
-        return {'message': 'User token verified'}, HTTP_200_OK
+        return {'message': 'User token verified.'}, HTTP_200_OK
     else:
-        return {'error': 'User token could not be verified'}, HTTP_401_UNAUTHORIZED
-    
-@auth.post('/updateuser')
-def updateUser():
-    id = request.json['id']
-    username = request.json['username']
-    email = request.json['email']
-
-    if(" " in username):
-        return {'error': 'Username must be alphanumeric and not contain spaces.'}, HTTP_400_BAD_REQUEST
-    
-    if(not validators.email(email)):
-        return {'error': 'Email is not valid.'}, HTTP_400_BAD_REQUEST
-    
-    if(User.query.filter(email == email, id != id).first() is not None):
-        return {'error': 'Email is already in use.'}, HTTP_409_CONFLICT
-
-    user =  User.query.filter_by(id = id).first()
-
-    if(user is not None):
-        user.username = username
-        user.email = email
-        db.session.commit()
-        return {'message': 'User updated with success.'}, HTTP_200_OK
-    else:
-        return {'error': 'User with id %scould not be found.'%(id)}, HTTP_400_BAD_REQUEST
+        return {'error': 'User token could not be verified.'}, HTTP_401_UNAUTHORIZED

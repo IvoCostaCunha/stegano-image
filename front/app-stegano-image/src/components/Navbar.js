@@ -25,27 +25,14 @@ import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import FindInPageIcon from '@mui/icons-material/FindInPage';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import { red } from '@mui/material/colors';
+import Button from '@mui/material/Button';
+import AppBar from '@mui/material/AppBar';
+import HelpCenterRoundedIcon from '@mui/icons-material/HelpCenterRounded';
+import { Snackbar, Alert } from '@mui/material';
+import { red, grey } from '@mui/material/colors';
 
 const drawerWidth = 240;
 
-const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => prop !== 'open',
-})(({ theme, open }) => ({
-  zIndex: theme.zIndex.drawer + 1,
-  transition: theme.transitions.create(['width', 'margin'], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  ...(open && {
-    marginLeft: drawerWidth,
-    width: `calc(100% - ${drawerWidth}px)`,
-    transition: theme.transitions.create(['width', 'margin'], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  }),
-}));
 
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
@@ -79,9 +66,13 @@ export default function Dashboard(props) {
 
   const navigate = useNavigate()
 
-  const [open, setOpen] = useState(true);
+  // Severities -> error, warning, info, success
+  const [severity, setSeverity] = useState('success')
   const [status, setStatus] = useState('')
-  const [showStatus, setShowStatus] = useState('None')
+  const [showStatus, setShowStatus] = useState(false)
+  const handleClose = async () => { setShowStatus(false) }
+
+  const [open, setOpen] = useState(false);
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -92,20 +83,31 @@ export default function Dashboard(props) {
     const response = await authContext.signOut()
 
     if (response.confirmation) {
+      setSeverity('success')
+      setStatus(response.message + ` (code: ${response.code})`)
       navigate("/signin", { replace: true });
     }
     else {
-      setStatus(response.error, ` (code: ${response.code}).`)
-      setShowStatus('inline')
+      setSeverity('error')
+      setStatus(response.error + ` (code: ${response.code})`)
     }
+    setShowStatus(true)
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar position="absolute" open={open}>
+    <Box>
+
+      <Snackbar open={showStatus} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} onClose={handleClose}>
+        <Alert variant="filled" onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+          {status}
+        </Alert>
+      </Snackbar>
+
+      <AppBar position="fixed">
         <Toolbar
           sx={{
             pr: '24px', // keep right padding when drawer closed
+            height: '5vh'
           }}
         >
           <IconButton
@@ -115,41 +117,44 @@ export default function Dashboard(props) {
             onClick={toggleDrawer}
             sx={{
               marginRight: '36px',
-              ...(open && { display: 'none' }),
             }}
           >
             <MenuIcon />
           </IconButton>
+
           <Typography
             component="h1"
             variant="h6"
             color="inherit"
+            align='center'
             noWrap
             sx={{ flexGrow: 1 }}
           >
             {appContext.currentPage}
           </Typography>
+
+          <Button onClick={() => { handleDisconnect() }}>
+            <ExitToAppIcon sx={{ color: grey[100] }} />
+          </Button>
+
         </Toolbar>
+
       </AppBar>
-      <Drawer variant="permanent" open={open}>
-        <Toolbar
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            px: [1],
-          }}
+      <Toolbar />
+      <Drawer
+        variant="permanent"
+        open={open}
+      >
+
+        <List
+          component="nav"
         >
-          <IconButton onClick={toggleDrawer}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </Toolbar>
-        <Divider />
-        <List component="nav">
-          <ListItemButton onClick={() => {
-            appContext.setCurrentPage('Dashboard')
-            navigate("/dashboard", { replace: true });
-          }}>
+          <ListItemButton
+            onClick={() => {
+              appContext.setCurrentPage('Dashboard')
+              navigate("/dashboard", { replace: true });
+            }}
+          >
             <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
@@ -186,31 +191,17 @@ export default function Dashboard(props) {
             <ListItemText primary="Verify Image" />
           </ListItemButton>
 
-          <ListItemButton onClick={() => { handleDisconnect() }}>
+          <ListItemButton onClick={() => {
+            appContext.setCurrentPage('About')
+            navigate("/about", { replace: true });
+          }}>
             <ListItemIcon>
-              <ExitToAppIcon />
+              <HelpCenterRoundedIcon />
             </ListItemIcon>
-            <ListItemText primary="Disconnect" />
+            <ListItemText primary="About" />
           </ListItemButton>
         </List>
-        <Typography component="h5" sx={{ display: showStatus, color: red[500] }}>
-          {status}
-        </Typography>
       </Drawer>
-      <Box
-        component="main"
-        sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === 'light'
-              ? theme.palette.grey[100]
-              : theme.palette.grey[900],
-          flexGrow: 1,
-          height: '100vh',
-          overflow: 'auto',
-        }}
-      >
-        <Toolbar />
-      </Box>
     </Box>
   );
 }

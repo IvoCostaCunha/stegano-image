@@ -154,7 +154,7 @@ def useLsb (rawPngFiles):
         
         signedFiles.append([filename, uuid, pilImg])
         
-    return {'message': 'Image signed with success.', 'confirmation': True, 'signedPngFiles': signedFiles }
+    return [{'message': 'Image signed with success.', 'confirmation': True}, signedFiles]
         
   else:
     return {'error': 'Files to sign could not be found.', 'confirmation': False}

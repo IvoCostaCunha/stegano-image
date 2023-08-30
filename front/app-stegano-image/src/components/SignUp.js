@@ -7,7 +7,6 @@ import Copyright from './Copyright';
 
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
@@ -15,7 +14,8 @@ import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { red, green } from '@mui/material/colors';
+import { Snackbar, Alert } from '@mui/material';
+import { red, green, orange } from '@mui/material/colors';
 
 
 export default function SignUp() {
@@ -23,38 +23,43 @@ export default function SignUp() {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext)
 
-  const [signUpStatusColor, setSignUpStatusColor] = useState(green[500])
-  const [showSignUpStatus, setShowSignUpStatus] = useState("none")
-  const [signUpStatus, setSignUpStatus] = useState("Welcome")
+  // Severities -> error, warning, info, success
+  const [severity, setSeverity] = useState('success')
+  const [status, setStatus] = useState('')
+  const [showStatus, setShowStatus] = useState(false)
+  const [showHelpText, setShowHelpText] = useState("none")
+  const handleClose = async () => { setShowStatus(false) }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget);
     const data = { email: formData.get('email'), username: formData.get('username'), password: formData.get('password') }
     const response = await authContext.signUp(data)
-    setShowSignUpStatus("inline")
 
     if (response.confirmation) {
-      setSignUpStatus(response.message)
+      setSeverity('success')
+      setStatus(response.message + ` code(${response.code})`)
       navigate("/signin", { replace: true });
     }
 
     if (!response.confirmation) {
-      setSignUpStatusColor(red[500])
-      setSignUpStatus(
-        response.error + ` error(${response.code}).` + `\n`
-        + `Password must be at least 6 characters long.\n`
-        + `Username must be alphanumerical without spaces.\n`
-        + `Email must be valid.`
-      )
+      setShowHelpText('')
+      setSeverity('error')
+      setStatus(response.error + ` code(${response.code}).`)
     }
-    else setSignUpStatus(response.error)
+    setShowStatus(true)
   }
 
 
   return (
     <Container component="main" maxWidth="xs">
-      <CssBaseline />
+
+      <Snackbar open={showStatus} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} onClose={handleClose}>
+        <Alert variant="filled" onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+          {status}
+        </Alert>
+      </Snackbar>
+
       <Box
         sx={{
           marginTop: 8,
@@ -111,10 +116,15 @@ export default function SignUp() {
           >
             Sign Up
           </Button>
-          <Typography component="h5" sx={{ display: showSignUpStatus, color: signUpStatusColor }}>
-            {signUpStatus}
+          {console.log(showHelpText)}
+          <Typography sx={{ display: showHelpText, color: orange[900], textAlign: 'center'}}>
+            {
+              `Password must be at least 6 characters long.\n`
+              + `Username must be alphanumerical without spaces.\n`
+              + `Email must be valid.`
+            }
           </Typography>
-          <Grid container justifyContent="flex-end">
+          <Grid container justifyContent='center'>
             <Grid item>
               <Link href='/app/signin' variant="body2">
                 Already have an account? Sign in

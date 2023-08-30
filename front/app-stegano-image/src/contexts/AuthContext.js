@@ -8,6 +8,7 @@ export default class AuthContextProvider extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      authentified: false,
       token: localStorage.getItem('token'),
       id: Number(localStorage.getItem('id')),
       username: localStorage.getItem('username'),
@@ -40,13 +41,13 @@ export default class AuthContextProvider extends Component {
         // this.state.username = requestJSON.username
         // this.state.created_at = requestJSON.created_at
 
-        this.setState(prevState => ({ ...prevState, token: requestJSON.token }));
         this.setState(prevState => ({ ...prevState, id: requestJSON.id }));
         this.setState(prevState => ({ ...prevState, email: requestJSON.email }));
         this.setState(prevState => ({ ...prevState, username: requestJSON.username }));
         this.setState(prevState => ({ ...prevState, created_at: requestJSON.created_at }));
-
-        this.updateLocalStorage(requestJSON.token, requestJSON.id, requestJSON.email, requestJSON.username, requestJSON.created_at)
+        this.setState(prevState => ({ ...prevState, token: requestJSON.token }))
+        const auth = await this.verifyToken()
+        this.setState(prevState => ({ ...prevState, authentified:  auth.confirmation}))
 
         console.log(requestJSON.message)
         return { message: requestJSON.message, confirmation: true, code: request.status }
@@ -128,7 +129,7 @@ export default class AuthContextProvider extends Component {
 
   updateUser = async (updateData) => {
     try {
-      let request = await fetch("http://localhost:5000/api/0.1/auth/updateuser", {
+      let request = await fetch("http://localhost:5000/api/0.1/user/updateuser", {
         method: "POST",
         headers: {
           'Accept': 'application/json',
@@ -152,7 +153,7 @@ export default class AuthContextProvider extends Component {
       }
       else {
         console.log(requestJSON.error)
-        return { message: requestJSON.error, confirmation: false, code: request.status }
+        return { error: requestJSON.error, confirmation: false, code: request.status }
       }
 
 
@@ -191,7 +192,7 @@ export default class AuthContextProvider extends Component {
     }
   }
 
-  updateLocalStorage = async (token, id , email, username, created_at) => {
+  updateLocalStorage = async (token, id, email, username, created_at) => {
     localStorage.setItem('token', token)
     localStorage.setItem('id', id)
     localStorage.setItem('email', email)

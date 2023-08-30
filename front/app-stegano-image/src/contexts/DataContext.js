@@ -54,7 +54,7 @@ export default class DataContextProvider extends Component {
       if (request.status === 200) {
         console.log(requestJSON.message)
 
-        const downloadId = requestJSON.download_id	
+        const downloadId = requestJSON.download_id
 
         const downloadRequest = await fetch("http://localhost:5000/api/0.1/files/download-request", {
           method: "POST",
@@ -88,9 +88,37 @@ export default class DataContextProvider extends Component {
     return id
   }
 
+  downloadFileFromUrl = async (url, filename) => {
+    try {
+      const request = await fetch(url, {
+        method: "GET"
+      })
+
+      const requestData = await request.blob()
+
+      if (request.status === 200) {
+        const a = document.createElement('a');
+        a.download = filename + '.' + requestData.type;
+        a.href = window.URL.createObjectURL(requestData);
+        a.click()
+        a.remove()
+        return { message: "Download sucessful.", confirmation: true, code: request.status }
+      }
+    } catch (err) {
+      console.log(err)
+      return { error: 'Download failed.', confirmation: false, code: "Unknown" }
+    }
+  }
+
   render() {
     return (
-      <DataContext.Provider value={{ ...this.state, sendPngFiles: this.sendPngFiles, getPngFiles: this.getPngFiles, requestDownload: this.requestDownload }}>
+      <DataContext.Provider value={{
+        ...this.state,
+        sendPngFiles: this.sendPngFiles,
+        getPngFiles: this.getPngFiles,
+        requestDownload: this.requestDownload,
+        downloadFileFromUrl: this.downloadFileFromUrl
+      }}>
         {this.props.children}
       </DataContext.Provider>
     )
