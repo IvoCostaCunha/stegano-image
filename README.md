@@ -41,7 +41,7 @@ Install the dependencies start the backend.
 On Windows:
 
 ```sh
-cd stegano-image\back\flask-api
+cd stegano-image\flask-api
 python -m venv .venv
 .venv\Scripts\activate
 # using python virtual environment
@@ -52,7 +52,7 @@ flask run
 On Mac:
 
 ```sh
-cd stegano-image/back/flask-api
+cd stegano-image/flask-api
 python -m venv .venv
 source .venv/bin/activate
 # using python virtual environment
@@ -71,7 +71,7 @@ flask -run
 Install the dependencies start the frontend.
 
 ```sh
-cd stegano-image/front/app-stegano-image
+cd stegano-image/app-stegano-image
 npm install
 npm start
 ```
